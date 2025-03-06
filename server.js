@@ -1,80 +1,20 @@
-// const express = require("express");
-// const cors = require("cors");
-// const pool = require("./db");
-
-// const app = express();
-// app.use(express.json()); // Ensure JSON requests/responses work
-// app.use(cors()); // Allow frontend to access API
-
-// app.get("/api/investor-options", async (req, res) => {
-//     try {
-//         console.log("🔄 Fetching investor options...");
-
-//         // Fetch unique values from the database
-//         const sectorsResult = await pool.query("SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL");
-//         const fundingStagesResult = await pool.query("SELECT DISTINCT funding_stage FROM investors WHERE funding_stage IS NOT NULL");
-//         const countriesResult = await pool.query("SELECT DISTINCT country FROM investors WHERE country IS NOT NULL");
-
-//         // Extract values from rows
-//         const sectors = sectorsResult.rows.map(row => row.sector).filter(Boolean);
-//         const fundingStages = fundingStagesResult.rows.map(row => row.funding_stage).filter(Boolean);
-//         const countries = countriesResult.rows.map(row => row.country).filter(Boolean);
-
-//         console.log("✅ Successfully fetched options:", { sectors, fundingStages, countries });
-
-//         // Send response
-//         res.json({ sectors, fundingStages, countries });
-
-//     } catch (err) {
-//         console.error("❌ Error fetching investor options:", err);
-//         res.status(500).json({ error: "Internal Server Error" });
-//     }
-// });
-
-// // Fetch all investors
-// app.get("/investors", async (req, res) => {
-//     try {
-//         const investors = await pool.query("SELECT * FROM investors");
-//         res.json(investors.rows);
-//     } catch (err) {
-//         console.error(err.message);
-//         res.status(500).send("Server Error");
-//     }
-// });
-
-// // Search & Filter Investors
-// app.get("/investors/search", async (req, res) => {
-//     const { sector, funding_stage } = req.query;
-
-//     try {
-//         const query = `
-//   SELECT * FROM investors
-//   WHERE ($1::TEXT IS NULL OR sector = $1::TEXT)
-//   AND ($2::TEXT IS NULL OR funding_stage = $2::TEXT)
-// `;
-//         const values = [sector || null, funding_stage || null];
-
-//         const investors = await pool.query(query, values);
-//         res.json(investors.rows);
-//     } catch (err) {
-//         console.error(err.message);
-//         res.status(500).send("Server Error");
-//     }
-// });
-
-// // Start Server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 const express = require("express");
 const cors = require("cors");
 const pool = require("./db");
+const path = require("path");
+const xlsx = require("xlsx");
+const fs = require("fs");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Fetch unique dropdown options for frontend
+const investorsFilePath = path.join(
+  __dirname,
+  "PropTech VCs - Investor Matching.xlsx"
+);
+
+//Fetch unique dropdown options for frontend
 app.get("/api/investor-options", async (req, res) => {
   try {
     const sectors = await pool.query(
@@ -86,19 +26,31 @@ app.get("/api/investor-options", async (req, res) => {
     const seriesStages = await pool.query(
       "SELECT DISTINCT funding_stage FROM investors WHERE funding_stage IS NOT NULL"
     );
+    const cities = await pool.query(
+      "SELECT DISTINCT city FROM investors WHERE city IS NOT NULL"
+    );
+    const techMediums = await pool.query(
+      "SELECT DISTINCT tech_medium FROM investors WHERE tech_medium IS NOT NULL"
+    );
+    const propTechOptions = await pool.query(
+      "SELECT DISTINCT prop_tech FROM investors WHERE prop_tech IS NOT NULL"
+    );
 
     res.json({
       sectors: sectors.rows.map((row) => row.sector),
       geographies: geographies.rows.map((row) => row.country),
       seriesStages: seriesStages.rows.map((row) => row.funding_stage),
+      cities: cities.rows.map((row) => row.city),
+      techMediums: techMediums.rows.map((row) => row.tech_medium),
+      propTechOptions: propTechOptions.rows.map((row) => row.prop_tech),
     });
   } catch (err) {
-    console.error("❌ Error fetching investor options:", err);
+    console.error("Error fetching investor options:", err);
     res.status(500).send("Server Error");
   }
 });
 
-// ✅ Search Investors (Normal & Advanced)
+// Search Investors (Normal & Advanced)
 app.get("/api/investors/search", async (req, res) => {
   try {
     const {
@@ -158,13 +110,100 @@ app.get("/api/investors/search", async (req, res) => {
     const investors = await pool.query(query, params);
     res.json(investors.rows);
   } catch (err) {
-    console.error("❌ Error searching investors:", err);
+    console.error("Error searching investors:", err);
     res.status(500).send("Server Error");
   }
 });
 
-// ✅ Start Server
+// API Endpoint to search investors via manual search
+app.get("/api/searchInvestors", async (req, res) => {
+  try {
+    const { sector } = req.query;
+    if (!sector) return res.status(400).json({ error: "Sector is required" });
+
+    // Read the Excel file
+    const workbook = xlsx.readFile(investorsFilePath);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    // Filter investors by sector
+    const results = data.filter((investor) =>
+      investor.Sector?.toLowerCase().includes(sector.toLowerCase())
+    );
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error searching investors:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/manual-search", async (req, res) => {
+  try {
+    const { sector } = req.query;
+    if (!sector) {
+      return res.status(400).json({ error: "Sector is required" });
+    }
+
+    // Case-insensitive search in the database
+    const query = `
+      SELECT * FROM investors 
+      WHERE LOWER(sector) LIKE LOWER($1)
+    `;
+    const investors = await pool.query(query, [`%${sector}%`]);
+
+    res.json(investors.rows);
+  } catch (error) {
+    console.error("Error fetching manual search results:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// API Endpoint to export results
+// app.get("/api/exportResults", async (req, res) => {
+//   try {
+//     const { sector } = req.query;
+//     if (!sector) return res.status(400).json({ error: "Sector is required" });
+
+//     // Read the Excel file
+//     const workbook = xlsx.readFile(investorsFilePath);
+//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//     const data = xlsx.utils.sheet_to_json(sheet);
+
+//     // Filter investors by sector (case-insensitive search)
+//     const results = data.filter(
+//       (investor) =>
+//         investor?.Sector &&
+//         investor.Sector.toLowerCase().includes(sector.toLowerCase())
+//     );
+
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: "No matching investors found" });
+//     }
+
+//     // Create a new workbook for exporting results
+//     const newWorkbook = xlsx.utils.book_new();
+//     const newSheet = xlsx.utils.json_to_sheet(results);
+//     xlsx.utils.book_append_sheet(newWorkbook, newSheet, "Results");
+
+//     // Define file path
+//     const outputPath = path.join(__dirname, "search_results.xlsx");
+
+//     // Write to file
+//     xlsx.writeFile(newWorkbook, outputPath);
+
+//     // Send file to client
+//     res.download(outputPath, "Investor_Results.xlsx", () => {
+//       fs.unlinkSync(outputPath); // Delete file after sending
+//     });
+//   } catch (error) {
+//     console.error("Error exporting results:", error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// });
+
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

@@ -7,7 +7,7 @@ const importInvestors = async () => {
     await workbook.xlsx.readFile("PropTech VCs - Investor Matching.xlsx"); // Ensure this file is inside the backend folder
     const worksheet = workbook.getWorksheet("PropTech VCs"); // First sheet
     if (!worksheet) {
-      console.error("❌ No worksheet found! Check the sheet name.");
+      console.error("No worksheet found! Check the sheet name.");
       return;
     }
 
@@ -17,26 +17,28 @@ const importInvestors = async () => {
 
       console.log(row);
 
-      const name = row[1] || null;
-      const sector = row[12] || null;
-      const funding_stage = row[7] || null;
-      const country = row[5] || null;
-      const investment_min = row[7] || null;
-      const investment_max = row[8] || null;
-      const city = row[6] || null;
-      const prop_tech = row[11] || null; // Yes/No field
-      const tech_medium = row[15] || null;
-      const video_link = row[4] || null; // Video URL
+      const name = row[1] || "";
+      const sector = row[12] || "";
+      const email = row[2] || "";
+      const funding_stage = row[13] || "";
+      const country = row[5] || "";
+      const investment_min = row[7] || 0;
+      const investment_max = row[8] || 0;
+      const city = row[6] || "";
+      const prop_tech = row[11] || false; // Yes/No field
+      const tech_medium = row[15] || "";
+      const video_link = row[4] || ""; // Video URL
 
-      if (name && sector && funding_stage) {
+      if (name && sector) {
         // Only insert valid data
         await pool.query(
           `INSERT INTO investors 
-                     (name, sector, funding_stage, country, investment_min, investment_max, city, prop_tech, tech_medium, video_link) 
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                     (name, sector,email, funding_stage, country, investment_min, investment_max, city, prop_tech, tech_medium, video_link) 
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
             name,
             sector,
+            email,
             funding_stage,
             country,
             investment_min,
@@ -48,15 +50,15 @@ const importInvestors = async () => {
           ]
         );
         console.log(
-          `✅ Inserted: ${name}, ${sector}, ${funding_stage}, ${country}, ${investment_min}, ${investment_max}, ${city}, ${prop_tech}, ${tech_medium}, ${video_link}`
+          `Inserted: ${name}, ${sector}, ${email}, ${funding_stage}, ${country}, ${investment_min}, ${investment_max}, ${city}, ${prop_tech}, ${tech_medium}, ${video_link}`
         );
       } else {
-        console.log(`⚠️ Skipped row ${i} due to missing required data`);
+        console.log(`Skipped row ${i} due to missing required data`);
       }
     }
-    console.log("🎉 Investor Data Imported Successfully!");
+    console.log("Investor Data Imported Successfully!");
   } catch (err) {
-    console.error("❌ Error importing data:", err);
+    console.error("Error importing data:", err);
   } finally {
     pool.end(); // Close DB connection
   }
