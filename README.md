@@ -28,7 +28,7 @@ The backend is built using Node.js with Express.js, and it integrates a database
 
 - Node.js (v14+ recommended)
 
-- MongoDB or PostgreSQL installed
+- PostgreSQL installed
 
 ### Steps to run locally
 
