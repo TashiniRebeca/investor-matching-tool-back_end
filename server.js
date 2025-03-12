@@ -3,7 +3,6 @@ const cors = require("cors");
 const pool = require("./db");
 const path = require("path");
 const xlsx = require("xlsx");
-const fs = require("fs");
 
 const app = express();
 app.use(express.json());
