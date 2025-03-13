@@ -27,22 +27,23 @@ const investorsFilePath = path.join(
 //Fetch unique dropdown options for frontend
 app.get("/api/investor-options", async (req, res) => {
   try {
-    const sectors = await pool.query(
+    const client = await pool.connect();
+    const sectors = await client.query(
       "SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL"
     );
-    const geographies = await pool.query(
+    const geographies = await client.query(
       "SELECT DISTINCT country FROM investors WHERE country IS NOT NULL"
     );
-    const seriesStages = await pool.query(
+    const seriesStages = await client.query(
       "SELECT DISTINCT funding_stage FROM investors WHERE funding_stage IS NOT NULL"
     );
-    const cities = await pool.query(
+    const cities = await client.query(
       "SELECT DISTINCT city FROM investors WHERE city IS NOT NULL"
     );
-    const techMediums = await pool.query(
+    const techMediums = await client.query(
       "SELECT DISTINCT tech_medium FROM investors WHERE tech_medium IS NOT NULL"
     );
-    const propTechOptions = await pool.query(
+    const propTechOptions = await client.query(
       "SELECT DISTINCT prop_tech FROM investors WHERE prop_tech IS NOT NULL"
     );
 
