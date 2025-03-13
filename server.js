@@ -7,15 +7,16 @@ const xlsx = require("xlsx");
 const backendURL = process.env.BACKEND_URL || "http://localhost:5000";
 
 const frontendURL =
-  process.env.FRONTEND_URL || "https://investor-matching-tool-f-e.vercel.app/";
+  process.env.FRONTEND_URL || "https://investor-matching-tool-f-e.vercel.app";
 
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: [frontendURL, "http://localhost:3000"],
+    origin: frontendURL,
     methods: ["GET", "POST"],
-    credentials: true,
+    credentials: true, // Allow cookies if needed
+    optionsSuccessStatus: 200,
   })
 );
 
@@ -25,25 +26,24 @@ const investorsFilePath = path.join(
 );
 
 //Fetch unique dropdown options for frontend
-app.get("/api/investor-options", async (req, res) => {
+app.get("/investor-options", async (req, res) => {
   try {
-    const client = await pool.connect();
-    const sectors = await client.query(
+    const sectors = await pool.query(
       "SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL"
     );
-    const geographies = await client.query(
+    const geographies = await pool.query(
       "SELECT DISTINCT country FROM investors WHERE country IS NOT NULL"
     );
-    const seriesStages = await client.query(
+    const seriesStages = await pool.query(
       "SELECT DISTINCT funding_stage FROM investors WHERE funding_stage IS NOT NULL"
     );
-    const cities = await client.query(
+    const cities = await pool.query(
       "SELECT DISTINCT city FROM investors WHERE city IS NOT NULL"
     );
-    const techMediums = await client.query(
+    const techMediums = await pool.query(
       "SELECT DISTINCT tech_medium FROM investors WHERE tech_medium IS NOT NULL"
     );
-    const propTechOptions = await client.query(
+    const propTechOptions = await pool.query(
       "SELECT DISTINCT prop_tech FROM investors WHERE prop_tech IS NOT NULL"
     );
 
@@ -62,7 +62,7 @@ app.get("/api/investor-options", async (req, res) => {
 });
 
 // Search Investors (Normal & Advanced)
-app.get("/api/investors/search", async (req, res) => {
+app.get("/investors/search", async (req, res) => {
   try {
     const {
       sector,
@@ -127,7 +127,7 @@ app.get("/api/investors/search", async (req, res) => {
 });
 
 // API Endpoint to search investors via manual search
-app.get("/api/searchInvestors", async (req, res) => {
+app.get("/searchInvestors", async (req, res) => {
   try {
     const { sector } = req.query;
     if (!sector) return res.status(400).json({ error: "Sector is required" });
@@ -149,7 +149,7 @@ app.get("/api/searchInvestors", async (req, res) => {
   }
 });
 
-app.get("/api/manual-search", async (req, res) => {
+app.get("/manual-search", async (req, res) => {
   try {
     const { sector } = req.query;
     if (!sector) {
