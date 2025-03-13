@@ -4,9 +4,18 @@ const pool = require("./db");
 const path = require("path");
 const xlsx = require("xlsx");
 
+const frontendURL =
+  process.env.FRONTEND_URL || "https://investor-matching-tool-f-e.vercel.app/";
+
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: [frontendURL, "http://localhost:3000"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 
 const investorsFilePath = path.join(
   __dirname,
