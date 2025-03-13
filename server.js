@@ -4,6 +4,8 @@ const pool = require("./db");
 const path = require("path");
 const xlsx = require("xlsx");
 
+const backendURL = process.env.BACKEND_URL || "http://localhost:5000";
+
 const frontendURL =
   process.env.FRONTEND_URL || "https://investor-matching-tool-f-e.vercel.app/";
 
@@ -23,7 +25,7 @@ const investorsFilePath = path.join(
 );
 
 //Fetch unique dropdown options for frontend
-app.get("/api/investor-options", async (req, res) => {
+app.get(`${backendURL}/api/investor-options`, async (req, res) => {
   try {
     const sectors = await pool.query(
       "SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL"
