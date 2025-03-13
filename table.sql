@@ -3,6 +3,7 @@ CREATE TABLE investors (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     sector VARCHAR(255),
+    email VARCHAR(255),
     funding_stage VARCHAR(255), --series 
     country VARCHAR(255),
     investment_min NUMERIC,
