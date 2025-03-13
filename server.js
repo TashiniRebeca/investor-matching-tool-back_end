@@ -26,7 +26,7 @@ const investorsFilePath = path.join(
 );
 
 //Fetch unique dropdown options for frontend
-app.get("/investor-options", async (req, res) => {
+app.get("/api/investor-options", async (req, res) => {
   try {
     const sectors = await pool.query(
       "SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL"
@@ -62,7 +62,7 @@ app.get("/investor-options", async (req, res) => {
 });
 
 // Search Investors (Normal & Advanced)
-app.get("/investors/search", async (req, res) => {
+app.get("/api/investors/search", async (req, res) => {
   try {
     const {
       sector,
@@ -127,7 +127,7 @@ app.get("/investors/search", async (req, res) => {
 });
 
 // API Endpoint to search investors via manual search
-app.get("/searchInvestors", async (req, res) => {
+app.get("/api/searchInvestors", async (req, res) => {
   try {
     const { sector } = req.query;
     if (!sector) return res.status(400).json({ error: "Sector is required" });
@@ -149,7 +149,7 @@ app.get("/searchInvestors", async (req, res) => {
   }
 });
 
-app.get("/manual-search", async (req, res) => {
+app.get("/api/manual-search", async (req, res) => {
   try {
     const { sector } = req.query;
     if (!sector) {
