@@ -25,7 +25,7 @@ const investorsFilePath = path.join(
 );
 
 //Fetch unique dropdown options for frontend
-app.get(`${backendURL}/api/investor-options`, async (req, res) => {
+app.get("/api/investor-options", async (req, res) => {
   try {
     const sectors = await pool.query(
       "SELECT DISTINCT sector FROM investors WHERE sector IS NOT NULL"
