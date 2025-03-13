@@ -7,7 +7,8 @@ const xlsx = require("xlsx");
 const backendURL = process.env.BACKEND_URL || "http://localhost:5000";
 
 const frontendURL =
-  process.env.FRONTEND_URL || "https://investor-matching-tool-f-e.vercel.app";
+  process.env.FRONTEND_URL?.replace(/\/$/, "") ||
+  "https://investor-matching-tool-f-e.vercel.app";
 
 const app = express();
 app.use(express.json());
