@@ -170,51 +170,9 @@ app.get("/manual-search", async (req, res) => {
   }
 });
 
-// API Endpoint to export results
-// app.get("/api/exportResults", async (req, res) => {
-//   try {
-//     const { sector } = req.query;
-//     if (!sector) return res.status(400).json({ error: "Sector is required" });
-
-//     // Read the Excel file
-//     const workbook = xlsx.readFile(investorsFilePath);
-//     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-//     const data = xlsx.utils.sheet_to_json(sheet);
-
-//     // Filter investors by sector (case-insensitive search)
-//     const results = data.filter(
-//       (investor) =>
-//         investor?.Sector &&
-//         investor.Sector.toLowerCase().includes(sector.toLowerCase())
-//     );
-
-//     if (results.length === 0) {
-//       return res.status(404).json({ error: "No matching investors found" });
-//     }
-
-//     // Create a new workbook for exporting results
-//     const newWorkbook = xlsx.utils.book_new();
-//     const newSheet = xlsx.utils.json_to_sheet(results);
-//     xlsx.utils.book_append_sheet(newWorkbook, newSheet, "Results");
-
-//     // Define file path
-//     const outputPath = path.join(__dirname, "search_results.xlsx");
-
-//     // Write to file
-//     xlsx.writeFile(newWorkbook, outputPath);
-
-//     // Send file to client
-//     res.download(outputPath, "Investor_Results.xlsx", () => {
-//       fs.unlinkSync(outputPath); // Delete file after sending
-//     });
-//   } catch (error) {
-//     console.error("Error exporting results:", error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// });
-
 // Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+module.exports = app;
